@@ -48,10 +48,11 @@
             <input
               id="region-input"
               type="text"
-              placeholder="请填写详细的市区，后续可按区分类，例如：南京市 建邺区"
+              placeholder="例如：南京市建邺区"
               maxlength="40"
               required
             />
+            <span class="field-hint">请填写详细的市区，后续可按区分类。</span>
           </label>
           <label>
             详细地址
@@ -118,27 +119,6 @@
         </div>
       </dl>
 
-      <section class="detail-editor" aria-label="编辑店铺信息">
-        <h3>编辑店铺信息</h3>
-        <label>
-          店名
-          <input id="edit-name-input" type="text" maxlength="40" />
-        </label>
-        <label>
-          省市区
-          <input id="edit-region-input" type="text" maxlength="40" />
-        </label>
-        <label>
-          详细地址
-          <textarea id="edit-address-input" maxlength="160"></textarea>
-        </label>
-        <label>
-          备注
-          <input id="edit-note-input" type="text" maxlength="80" />
-        </label>
-        <button type="button" class="map-button" id="save-info-button">保存店铺信息</button>
-      </section>
-
       <section class="detail-editor" aria-label="吃后记录">
         <h3>吃后记录</h3>
         <label class="switch-row">
@@ -169,6 +149,27 @@
         <button type="button" class="map-button" id="save-place-location-button">保存当前位置为店铺位置</button>
         <button type="button" class="secondary-button" id="reset-place-location-button">重置位置</button>
       </div>
+
+      <section class="detail-editor" aria-label="编辑店铺信息">
+        <h3>编辑店铺信息</h3>
+        <label>
+          店名
+          <input id="edit-name-input" type="text" maxlength="40" />
+        </label>
+        <label>
+          省市区
+          <input id="edit-region-input" type="text" maxlength="40" />
+        </label>
+        <label>
+          详细地址
+          <textarea id="edit-address-input" maxlength="160"></textarea>
+        </label>
+        <label>
+          备注
+          <input id="edit-note-input" type="text" maxlength="80" />
+        </label>
+        <button type="button" class="map-button" id="save-info-button">保存店铺信息</button>
+      </section>
     </dialog>
 
     <dialog class="detail-dialog help-dialog" id="help-dialog">
