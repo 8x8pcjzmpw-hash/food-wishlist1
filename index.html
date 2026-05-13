@@ -5,9 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
     <meta name="theme-color" content="#1f7a63" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
-    <meta name="apple-mobile-web-app-title" content="想吃清单" />
+    <meta name="apple-mobile-web-app-title" content="猪猪美食之旅" />
     <meta name="apple-mobile-web-app-status-bar-style" content="default" />
-    <title>想吃清单</title>
+    <title>猪猪美食之旅</title>
     <link rel="manifest" href="./manifest.webmanifest" />
     <link rel="icon" href="./icon.svg" type="image/svg+xml" />
     <link rel="apple-touch-icon" href="./icon.svg" />
@@ -17,13 +17,23 @@
     <main class="app-shell">
       <section class="topbar" aria-labelledby="app-title">
         <div>
-          <p class="eyebrow">Food Wishlist</p>
-          <h1 id="app-title">想吃清单</h1>
+          <p class="eyebrow">Food Journey</p>
+          <h1 id="app-title">猪猪美食之旅</h1>
         </div>
-        <div class="stats" aria-live="polite">
-          <span><strong id="total-count">0</strong> 家店</span>
-          <span><strong id="tasted-count">0</strong> 已品尝</span>
+        <div class="topbar-side">
+          <button type="button" class="help-button" id="help-button">功能介绍</button>
+          <div class="stats" aria-live="polite">
+            <span><strong id="total-count">0</strong> 家店</span>
+            <span><strong id="tasted-count">0</strong> 已品尝</span>
+          </div>
         </div>
+      </section>
+
+      <section class="backup-bar" aria-label="快捷操作">
+        <button type="button" class="backup-button" id="recommend-button">推荐最近的再来吃</button>
+        <button type="button" class="backup-button" id="export-button">导出数据</button>
+        <button type="button" class="backup-button" id="import-button">导入数据</button>
+        <input id="import-input" class="visually-hidden" type="file" accept="application/json,.json" />
       </section>
 
       <section class="content-grid">
@@ -34,8 +44,12 @@
             <input id="name-input" type="text" placeholder="例如：小川烧鸟" maxlength="40" required />
           </label>
           <label>
+            省市区
+            <input id="region-input" type="text" placeholder="例如：上海市 静安区" maxlength="40" required />
+          </label>
+          <label>
             详细地址
-            <textarea id="address-input" placeholder="例如：南京西路 123 号 2 楼" maxlength="160" required></textarea>
+            <textarea id="address-input" placeholder="请填写详细地址" maxlength="160" required></textarea>
           </label>
           <label>
             备注
@@ -53,6 +67,13 @@
               <button type="button" class="filter-button" data-filter="tasted">已品尝</button>
             </div>
           </div>
+          <label class="district-filter">
+            按区筛选
+            <select id="district-filter">
+              <option value="all">全部地区</option>
+            </select>
+          </label>
+          <p class="recommendation" id="recommendation" aria-live="polite"></p>
           <div class="restaurant-list" id="restaurant-list"></div>
           <p class="empty-state" id="empty-state">还没有店铺，先添加一家想吃的吧。</p>
         </section>
@@ -69,18 +90,68 @@
       </div>
       <dl class="detail-list">
         <div>
+          <dt>省市区</dt>
+          <dd id="dialog-region"></dd>
+        </div>
+        <div>
           <dt>详细地址</dt>
           <dd id="dialog-address"></dd>
+        </div>
+        <div>
+          <dt>定位状态</dt>
+          <dd id="dialog-location-status"></dd>
         </div>
         <div>
           <dt>备注</dt>
           <dd id="dialog-note"></dd>
         </div>
       </dl>
+
+      <section class="detail-editor" aria-label="吃后记录">
+        <label class="switch-row">
+          <input id="revisit-input" type="checkbox" />
+          再来吃
+        </label>
+        <label>
+          打分
+          <select id="rating-input">
+            <option value="0">未评分</option>
+            <option value="1">1 分</option>
+            <option value="2">2 分</option>
+            <option value="3">3 分</option>
+            <option value="4">4 分</option>
+            <option value="5">5 分</option>
+          </select>
+        </label>
+        <label>
+          吃后感
+          <textarea id="review-input" placeholder="记录一下真实感受、推荐菜、踩雷点..." maxlength="300"></textarea>
+        </label>
+        <button type="button" class="map-button" id="save-review-button">保存吃后记录</button>
+      </section>
+
       <div class="dialog-actions">
         <button type="button" class="secondary-button" id="delete-button">删除</button>
-        <a class="map-button" id="map-button" target="_blank" rel="noreferrer">打开地图</a>
+        <a class="map-button compact-map-button" id="apple-map-button" target="_blank" rel="noreferrer">苹果地图</a>
+        <a class="map-button compact-map-button" id="amap-button" target="_blank" rel="noreferrer">高德地图</a>
+        <button type="button" class="map-button" id="save-place-location-button">保存当前位置为店铺位置</button>
         <button type="button" class="primary-button" id="toggle-tasted-button"></button>
+      </div>
+    </dialog>
+
+    <dialog class="detail-dialog help-dialog" id="help-dialog">
+      <div class="dialog-header">
+        <div>
+          <p class="eyebrow">Guide</p>
+          <h2>功能介绍</h2>
+        </div>
+        <button type="button" class="icon-button" id="close-help-dialog" aria-label="关闭功能介绍">×</button>
+      </div>
+      <div class="help-content">
+        <p>添加店铺时填写店名、省市区、详细地址和备注，之后可以按区筛选。</p>
+        <p>吃过后进入详情，可标记已品尝、写吃后感、打 1-5 分，也可以勾选“再来吃”。</p>
+        <p>到店时在详情里保存当前位置，之后点击“推荐最近的再来吃”，会从已保存位置且勾选再来吃的店里推荐最近的一家。</p>
+        <p>导出数据可以备份或换手机；导入数据会覆盖当前清单，导入前建议先备份。</p>
       </div>
     </dialog>
 

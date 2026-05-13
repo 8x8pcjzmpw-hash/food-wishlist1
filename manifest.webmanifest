@@ -1,6 +1,6 @@
 {
-  "name": "想吃清单",
-  "short_name": "想吃清单",
+  "name": "猪猪美食之旅",
+  "short_name": "美食之旅",
   "description": "记录想吃的店铺、地址和品尝状态。",
   "start_url": "./index.html",
   "scope": "./",

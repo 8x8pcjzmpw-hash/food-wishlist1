@@ -53,6 +53,12 @@ button {
   padding-bottom: 24px;
 }
 
+.topbar-side {
+  display: grid;
+  gap: 10px;
+  justify-items: end;
+}
+
 .eyebrow {
   margin: 0 0 6px;
   color: var(--accent);
@@ -99,6 +105,53 @@ h2 {
   font-size: 1.4rem;
 }
 
+.backup-bar {
+  display: flex;
+  gap: 10px;
+  justify-content: flex-end;
+  margin: -8px 0 18px;
+}
+
+.backup-button {
+  min-height: 40px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #fffdf9;
+  color: var(--accent-dark);
+  font-weight: 800;
+  padding: 0 14px;
+}
+
+.help-button {
+  min-height: 36px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--surface);
+  color: var(--accent-dark);
+  font-weight: 900;
+  padding: 0 12px;
+}
+
+.help-button:hover {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+}
+
+.backup-button:hover {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+}
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  clip-path: inset(50%);
+}
+
 .content-grid {
   display: grid;
   grid-template-columns: minmax(280px, 360px) minmax(0, 1fr);
@@ -131,7 +184,8 @@ label {
 }
 
 input,
-textarea {
+textarea,
+select {
   width: 100%;
   border: 1px solid var(--line);
   border-radius: 8px;
@@ -147,7 +201,8 @@ textarea {
 }
 
 input:focus,
-textarea:focus {
+textarea:focus,
+select:focus {
   border-color: var(--accent);
   box-shadow: 0 0 0 4px var(--accent-soft);
 }
@@ -156,6 +211,7 @@ textarea:focus {
 .secondary-button,
 .map-button,
 .filter-button,
+.switch-row,
 .icon-button {
   border: 0;
   border-radius: 8px;
@@ -205,9 +261,27 @@ textarea:focus {
   background: #cce8de;
 }
 
+.compact-map-button {
+  min-height: 34px;
+  padding: 0 12px;
+  font-size: 0.88rem;
+}
+
 .list-panel {
   min-height: 520px;
   padding: 18px;
+}
+
+.district-filter {
+  margin-bottom: 14px;
+}
+
+.recommendation {
+  min-height: 0;
+  margin: 0 0 14px;
+  color: var(--accent-dark);
+  font-weight: 800;
+  line-height: 1.5;
 }
 
 .panel-header {
@@ -273,6 +347,27 @@ textarea:focus {
   line-height: 1.45;
 }
 
+.restaurant-card .restaurant-meta {
+  margin-top: 4px;
+  color: var(--accent-dark);
+  font-size: 0.88rem;
+  font-weight: 800;
+}
+
+.restaurant-card .restaurant-rating {
+  margin-top: 6px;
+  color: var(--warm);
+  font-size: 0.92rem;
+  font-weight: 900;
+}
+
+.badge-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  align-items: flex-end;
+}
+
 .badge {
   border-radius: 999px;
   padding: 7px 10px;
@@ -286,6 +381,11 @@ textarea:focus {
 .badge.tasted {
   background: var(--accent-soft);
   color: var(--accent-dark);
+}
+
+.badge.revisit {
+  background: #fff0d8;
+  color: #8b4b10;
 }
 
 .empty-state {
@@ -342,6 +442,41 @@ textarea:focus {
   padding: 20px;
 }
 
+.detail-editor {
+  display: grid;
+  gap: 14px;
+  border-top: 1px solid var(--line);
+  padding: 20px;
+}
+
+.help-content {
+  display: grid;
+  gap: 12px;
+  padding: 20px;
+}
+
+.help-content p {
+  margin: 0;
+  color: var(--muted);
+  line-height: 1.65;
+}
+
+.switch-row {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 10px;
+  min-height: 42px;
+  color: var(--accent-dark);
+  font-weight: 900;
+}
+
+.switch-row input {
+  width: 20px;
+  height: 20px;
+  accent-color: var(--accent);
+}
+
 .detail-list div {
   display: grid;
   gap: 6px;
@@ -371,9 +506,14 @@ dd {
   }
 
   .topbar,
-  .panel-header {
+  .panel-header,
+  .backup-bar {
     align-items: stretch;
     flex-direction: column;
+  }
+
+  .topbar-side {
+    justify-items: stretch;
   }
 
   .stats,
@@ -382,7 +522,8 @@ dd {
   }
 
   .stats span,
-  .filter-button {
+  .filter-button,
+  .backup-button {
     flex: 1;
   }
 
@@ -400,6 +541,12 @@ dd {
 
   .badge {
     justify-self: start;
+  }
+
+  .badge-group {
+    align-items: flex-start;
+    flex-direction: row;
+    flex-wrap: wrap;
   }
 
   .dialog-actions > * {
