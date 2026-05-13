@@ -1,0 +1,408 @@
+:root {
+  color-scheme: light;
+  font-family:
+    Inter, "PingFang SC", "Microsoft YaHei", system-ui, -apple-system, BlinkMacSystemFont,
+    "Segoe UI", sans-serif;
+  --bg: #f6f4ee;
+  --surface: #ffffff;
+  --ink: #21201d;
+  --muted: #6c675e;
+  --line: #ded8cd;
+  --accent: #1f7a63;
+  --accent-dark: #145947;
+  --accent-soft: #dff1eb;
+  --warm: #bf5138;
+  --shadow: 0 18px 50px rgba(43, 38, 30, 0.12);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.7), rgba(255, 255, 255, 0)),
+    var(--bg);
+  color: var(--ink);
+  -webkit-tap-highlight-color: transparent;
+}
+
+button,
+input,
+textarea {
+  font: inherit;
+}
+
+button {
+  cursor: pointer;
+}
+
+.app-shell {
+  width: min(1120px, calc(100% - 32px));
+  margin: 0 auto;
+  padding: 36px 0;
+}
+
+.topbar {
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  gap: 20px;
+  padding-bottom: 24px;
+}
+
+.eyebrow {
+  margin: 0 0 6px;
+  color: var(--accent);
+  font-size: 0.78rem;
+  font-weight: 800;
+  letter-spacing: 0;
+  text-transform: uppercase;
+}
+
+h1,
+h2 {
+  margin: 0;
+  line-height: 1.1;
+}
+
+h1 {
+  font-size: clamp(2rem, 8vw, 4.5rem);
+}
+
+h2 {
+  font-size: 1.2rem;
+}
+
+.stats {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.stats span {
+  min-width: 92px;
+  padding: 10px 14px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.66);
+  color: var(--muted);
+  text-align: center;
+}
+
+.stats strong {
+  display: block;
+  color: var(--ink);
+  font-size: 1.4rem;
+}
+
+.content-grid {
+  display: grid;
+  grid-template-columns: minmax(280px, 360px) minmax(0, 1fr);
+  gap: 18px;
+  align-items: start;
+}
+
+.restaurant-form,
+.list-panel {
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--surface);
+  box-shadow: var(--shadow);
+}
+
+.restaurant-form {
+  display: grid;
+  gap: 16px;
+  padding: 22px;
+  position: sticky;
+  top: 18px;
+}
+
+label {
+  display: grid;
+  gap: 8px;
+  color: var(--muted);
+  font-size: 0.92rem;
+  font-weight: 700;
+}
+
+input,
+textarea {
+  width: 100%;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #fffdf9;
+  color: var(--ink);
+  outline: none;
+  padding: 12px 13px;
+}
+
+textarea {
+  min-height: 108px;
+  resize: vertical;
+}
+
+input:focus,
+textarea:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 4px var(--accent-soft);
+}
+
+.primary-button,
+.secondary-button,
+.map-button,
+.filter-button,
+.icon-button {
+  border: 0;
+  border-radius: 8px;
+  min-height: 42px;
+  transition:
+    transform 0.16s ease,
+    background 0.16s ease,
+    color 0.16s ease;
+}
+
+.primary-button {
+  background: var(--accent);
+  color: #fff;
+  font-weight: 800;
+  padding: 0 18px;
+}
+
+.primary-button:hover {
+  background: var(--accent-dark);
+  transform: translateY(-1px);
+}
+
+.secondary-button {
+  background: #f4eee6;
+  color: var(--warm);
+  font-weight: 800;
+  padding: 0 18px;
+}
+
+.secondary-button:hover {
+  background: #efe2d8;
+}
+
+.map-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--accent-soft);
+  color: var(--accent-dark);
+  font-weight: 800;
+  min-height: 42px;
+  padding: 0 18px;
+  text-decoration: none;
+}
+
+.map-button:hover {
+  background: #cce8de;
+}
+
+.list-panel {
+  min-height: 520px;
+  padding: 18px;
+}
+
+.panel-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  margin-bottom: 16px;
+}
+
+.filters {
+  display: flex;
+  gap: 6px;
+  padding: 4px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #fbf8f1;
+}
+
+.filter-button {
+  min-height: 34px;
+  background: transparent;
+  color: var(--muted);
+  font-weight: 800;
+  padding: 0 12px;
+}
+
+.filter-button.active {
+  background: var(--accent);
+  color: #fff;
+}
+
+.restaurant-list {
+  display: grid;
+  gap: 10px;
+}
+
+.restaurant-card {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 12px;
+  align-items: center;
+  width: 100%;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #fffdf9;
+  padding: 14px;
+  text-align: left;
+}
+
+.restaurant-card:hover {
+  border-color: var(--accent);
+}
+
+.restaurant-card h3 {
+  margin: 0 0 6px;
+  font-size: 1.05rem;
+}
+
+.restaurant-card p {
+  margin: 0;
+  color: var(--muted);
+  line-height: 1.45;
+}
+
+.badge {
+  border-radius: 999px;
+  padding: 7px 10px;
+  background: #f4eee6;
+  color: var(--warm);
+  font-size: 0.8rem;
+  font-weight: 900;
+  white-space: nowrap;
+}
+
+.badge.tasted {
+  background: var(--accent-soft);
+  color: var(--accent-dark);
+}
+
+.empty-state {
+  display: none;
+  margin: 70px auto 0;
+  max-width: 280px;
+  color: var(--muted);
+  text-align: center;
+  line-height: 1.7;
+}
+
+.empty-state.visible {
+  display: block;
+}
+
+.detail-dialog {
+  width: min(520px, calc(100% - 28px));
+  border: 0;
+  border-radius: 8px;
+  padding: 0;
+  color: var(--ink);
+  box-shadow: var(--shadow);
+}
+
+.detail-dialog::backdrop {
+  background: rgba(24, 22, 18, 0.48);
+}
+
+.dialog-header,
+.dialog-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 20px;
+}
+
+.dialog-header {
+  border-bottom: 1px solid var(--line);
+}
+
+.icon-button {
+  width: 42px;
+  background: #f4eee6;
+  color: var(--ink);
+  font-size: 1.4rem;
+  line-height: 1;
+}
+
+.detail-list {
+  display: grid;
+  gap: 18px;
+  margin: 0;
+  padding: 20px;
+}
+
+.detail-list div {
+  display: grid;
+  gap: 6px;
+}
+
+dt {
+  color: var(--muted);
+  font-size: 0.86rem;
+  font-weight: 800;
+}
+
+dd {
+  margin: 0;
+  line-height: 1.55;
+  overflow-wrap: anywhere;
+}
+
+.dialog-actions {
+  border-top: 1px solid var(--line);
+  flex-wrap: wrap;
+}
+
+@media (max-width: 760px) {
+  .app-shell {
+    width: min(100% - 20px, 560px);
+    padding: max(18px, env(safe-area-inset-top)) 0 max(24px, env(safe-area-inset-bottom));
+  }
+
+  .topbar,
+  .panel-header {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .stats,
+  .filters {
+    justify-content: stretch;
+  }
+
+  .stats span,
+  .filter-button {
+    flex: 1;
+  }
+
+  .content-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .restaurant-form {
+    position: static;
+  }
+
+  .restaurant-card {
+    grid-template-columns: 1fr;
+  }
+
+  .badge {
+    justify-self: start;
+  }
+
+  .dialog-actions > * {
+    flex: 1 1 100%;
+  }
+}

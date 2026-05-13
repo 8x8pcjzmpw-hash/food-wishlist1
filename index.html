@@ -1,0 +1,89 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="theme-color" content="#1f7a63" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-title" content="想吃清单" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+    <title>想吃清单</title>
+    <link rel="manifest" href="./manifest.webmanifest" />
+    <link rel="icon" href="./icon.svg" type="image/svg+xml" />
+    <link rel="apple-touch-icon" href="./icon.svg" />
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <main class="app-shell">
+      <section class="topbar" aria-labelledby="app-title">
+        <div>
+          <p class="eyebrow">Food Wishlist</p>
+          <h1 id="app-title">想吃清单</h1>
+        </div>
+        <div class="stats" aria-live="polite">
+          <span><strong id="total-count">0</strong> 家店</span>
+          <span><strong id="tasted-count">0</strong> 已品尝</span>
+        </div>
+      </section>
+
+      <section class="content-grid">
+        <form class="restaurant-form" id="restaurant-form">
+          <h2>添加店铺</h2>
+          <label>
+            店名
+            <input id="name-input" type="text" placeholder="例如：小川烧鸟" maxlength="40" required />
+          </label>
+          <label>
+            详细地址
+            <textarea id="address-input" placeholder="例如：南京西路 123 号 2 楼" maxlength="160" required></textarea>
+          </label>
+          <label>
+            备注
+            <input id="note-input" type="text" placeholder="招牌菜、排队提示、朋友推荐..." maxlength="80" />
+          </label>
+          <button type="submit" class="primary-button">添加到清单</button>
+        </form>
+
+        <section class="list-panel" aria-labelledby="list-title">
+          <div class="panel-header">
+            <h2 id="list-title">店铺列表</h2>
+            <div class="filters" role="group" aria-label="筛选店铺">
+              <button type="button" class="filter-button active" data-filter="all">全部</button>
+              <button type="button" class="filter-button" data-filter="pending">未品尝</button>
+              <button type="button" class="filter-button" data-filter="tasted">已品尝</button>
+            </div>
+          </div>
+          <div class="restaurant-list" id="restaurant-list"></div>
+          <p class="empty-state" id="empty-state">还没有店铺，先添加一家想吃的吧。</p>
+        </section>
+      </section>
+    </main>
+
+    <dialog class="detail-dialog" id="detail-dialog">
+      <div class="dialog-header">
+        <div>
+          <p class="eyebrow" id="dialog-status"></p>
+          <h2 id="dialog-name"></h2>
+        </div>
+        <button type="button" class="icon-button" id="close-dialog" aria-label="关闭详情">×</button>
+      </div>
+      <dl class="detail-list">
+        <div>
+          <dt>详细地址</dt>
+          <dd id="dialog-address"></dd>
+        </div>
+        <div>
+          <dt>备注</dt>
+          <dd id="dialog-note"></dd>
+        </div>
+      </dl>
+      <div class="dialog-actions">
+        <button type="button" class="secondary-button" id="delete-button">删除</button>
+        <a class="map-button" id="map-button" target="_blank" rel="noreferrer">打开地图</a>
+        <button type="button" class="primary-button" id="toggle-tasted-button"></button>
+      </div>
+    </dialog>
+
+    <script src="./app.js"></script>
+  </body>
+</html>

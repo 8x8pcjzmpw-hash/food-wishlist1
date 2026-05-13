@@ -1,0 +1,18 @@
+{
+  "name": "想吃清单",
+  "short_name": "想吃清单",
+  "description": "记录想吃的店铺、地址和品尝状态。",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#f6f4ee",
+  "theme_color": "#1f7a63",
+  "icons": [
+    {
+      "src": "./icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
