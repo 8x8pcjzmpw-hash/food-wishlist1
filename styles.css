@@ -442,11 +442,21 @@ select:focus {
   padding: 20px;
 }
 
+.detail-top-action {
+  display: grid;
+  padding: 16px 20px 0;
+}
+
 .detail-editor {
   display: grid;
   gap: 14px;
   border-top: 1px solid var(--line);
   padding: 20px;
+}
+
+.detail-editor h3 {
+  margin: 0;
+  font-size: 1rem;
 }
 
 .help-content {

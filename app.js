@@ -25,6 +25,11 @@ const dialogRegion = document.querySelector("#dialog-region");
 const dialogAddress = document.querySelector("#dialog-address");
 const dialogLocationStatus = document.querySelector("#dialog-location-status");
 const dialogNote = document.querySelector("#dialog-note");
+const editNameInput = document.querySelector("#edit-name-input");
+const editRegionInput = document.querySelector("#edit-region-input");
+const editAddressInput = document.querySelector("#edit-address-input");
+const editNoteInput = document.querySelector("#edit-note-input");
+const saveInfoButton = document.querySelector("#save-info-button");
 const revisitInput = document.querySelector("#revisit-input");
 const ratingInput = document.querySelector("#rating-input");
 const reviewInput = document.querySelector("#review-input");
@@ -34,8 +39,8 @@ const helpDialog = document.querySelector("#help-dialog");
 const closeHelpDialog = document.querySelector("#close-help-dialog");
 const deleteButton = document.querySelector("#delete-button");
 const appleMapButton = document.querySelector("#apple-map-button");
-const amapButton = document.querySelector("#amap-button");
 const savePlaceLocationButton = document.querySelector("#save-place-location-button");
+const resetPlaceLocationButton = document.querySelector("#reset-place-location-button");
 const toggleTastedButton = document.querySelector("#toggle-tasted-button");
 
 let restaurants = loadRestaurants();
@@ -90,7 +95,6 @@ importButton.addEventListener("click", showImportGuide);
 importInput.addEventListener("change", importRestaurants);
 helpButton.addEventListener("click", () => helpDialog.showModal());
 closeHelpDialog.addEventListener("click", () => helpDialog.close());
-
 closeDialog.addEventListener("click", () => dialog.close());
 
 dialog.addEventListener("click", (event) => {
@@ -118,7 +122,9 @@ deleteButton.addEventListener("click", () => {
   render();
 });
 
+saveInfoButton.addEventListener("click", saveRestaurantInfo);
 savePlaceLocationButton.addEventListener("click", saveCurrentLocationForActiveRestaurant);
+resetPlaceLocationButton.addEventListener("click", resetActiveRestaurantLocation);
 saveReviewButton.addEventListener("click", saveEatingRecord);
 revisitInput.addEventListener("change", saveEatingRecord);
 ratingInput.addEventListener("change", saveEatingRecord);
@@ -185,14 +191,44 @@ function openDetails(id) {
   dialogAddress.textContent = restaurant.address;
   dialogLocationStatus.textContent = restaurant.coordinates ? "已保存店铺位置" : "未保存店铺位置";
   dialogNote.textContent = restaurant.note || "暂无备注";
+  editNameInput.value = restaurant.name;
+  editRegionInput.value = restaurant.region || "";
+  editAddressInput.value = restaurant.address;
+  editNoteInput.value = restaurant.note || "";
   revisitInput.checked = Boolean(restaurant.revisit);
   ratingInput.value = String(restaurant.rating || 0);
   reviewInput.value = restaurant.review || "";
   appleMapButton.href = createAppleMapUrl(restaurant);
-  amapButton.href = createAmapUrl(restaurant);
   toggleTastedButton.textContent = restaurant.tasted ? "改为未品尝" : "标记为已品尝";
 
   if (!dialog.open) dialog.showModal();
+}
+
+function saveRestaurantInfo() {
+  const name = editNameInput.value.trim();
+  const region = editRegionInput.value.trim();
+  const address = editAddressInput.value.trim();
+  const note = editNoteInput.value.trim();
+  if (!name || !region || !address) {
+    alert("店名、省市区和详细地址不能为空。");
+    return;
+  }
+
+  restaurants = restaurants.map((restaurant) => {
+    if (restaurant.id !== activeRestaurantId) return restaurant;
+    return {
+      ...restaurant,
+      name,
+      region,
+      district: getDistrict(region),
+      address,
+      note,
+    };
+  });
+  saveRestaurants();
+  render();
+  openDetails(activeRestaurantId);
+  alert("店铺信息已保存。");
 }
 
 function saveEatingRecord() {
@@ -303,6 +339,19 @@ function saveCurrentLocationForActiveRestaurant() {
   );
 }
 
+function resetActiveRestaurantLocation() {
+  const confirmed = confirm("确定要重置这家店保存的位置吗？重置后它不会参与最近推荐，直到重新保存位置。");
+  if (!confirmed) return;
+
+  restaurants = restaurants.map((restaurant) => {
+    if (restaurant.id !== activeRestaurantId) return restaurant;
+    return { ...restaurant, coordinates: null };
+  });
+  saveRestaurants();
+  render();
+  openDetails(activeRestaurantId);
+}
+
 function createId() {
   if (globalThis.crypto && typeof globalThis.crypto.randomUUID === "function") {
     return globalThis.crypto.randomUUID();
@@ -325,15 +374,6 @@ function createAppleMapUrl(restaurant) {
     return `https://maps.apple.com/?ll=${restaurant.coordinates.lat},${restaurant.coordinates.lng}&q=${query}`;
   }
   return `https://maps.apple.com/?q=${query}`;
-}
-
-function createAmapUrl(restaurant) {
-  const name = encodeURIComponent(restaurant.name);
-  if (restaurant.coordinates) {
-    return `https://uri.amap.com/marker?position=${restaurant.coordinates.lng},${restaurant.coordinates.lat}&name=${name}`;
-  }
-  const keyword = encodeURIComponent(`${restaurant.name} ${restaurant.region || ""} ${restaurant.address}`);
-  return `https://uri.amap.com/search?keyword=${keyword}`;
 }
 
 function getDistanceInKm(from, to) {
