@@ -122,6 +122,30 @@ h2 {
   padding: 0 14px;
 }
 
+.sync-status {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 40px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--surface);
+  color: var(--muted);
+  font-size: 0.86rem;
+  font-weight: 900;
+  padding: 0 12px;
+}
+
+.sync-status[data-state="已同步"] {
+  color: var(--accent-dark);
+  background: var(--accent-soft);
+}
+
+.sync-status[data-state="同步失败"] {
+  color: var(--warm);
+  background: #fff0d8;
+}
+
 .help-button {
   min-height: 36px;
   border: 1px solid var(--line);
@@ -540,7 +564,8 @@ dd {
 
   .stats span,
   .filter-button,
-  .backup-button {
+  .backup-button,
+  .sync-status {
     flex: 1;
   }
 

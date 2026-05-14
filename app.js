@@ -1,4 +1,8 @@
 const STORAGE_KEY = "restaurant-wishlist-v1";
+const SUPABASE_REST_URL = "https://ltzofzplzyravemacxhz.supabase.co/rest/v1";
+const SUPABASE_KEY = "sb_publishable_1wwoc9WMeWpysuEs4_Wkog_jqnb7uTH";
+const SHARED_LIST_ID = "pig-food-7Kx92mQpN2026";
+const RESTAURANTS_TABLE = "restaurant_items";
 
 const form = document.querySelector("#restaurant-form");
 const nameInput = document.querySelector("#name-input");
@@ -12,6 +16,7 @@ const tastedCount = document.querySelector("#tasted-count");
 const filterButtons = document.querySelectorAll(".filter-button");
 const districtFilter = document.querySelector("#district-filter");
 const recommendation = document.querySelector("#recommendation");
+const syncStatus = document.querySelector("#sync-status");
 const helpButton = document.querySelector("#help-button");
 const recommendButton = document.querySelector("#recommend-button");
 const exportButton = document.querySelector("#export-button");
@@ -47,8 +52,10 @@ let restaurants = loadRestaurants();
 let activeFilter = "all";
 let activeDistrict = "all";
 let activeRestaurantId = null;
+let syncTimer = null;
 
 render();
+loadCloudRestaurants();
 
 form.addEventListener("submit", (event) => {
   event.preventDefault();
@@ -66,6 +73,7 @@ form.addEventListener("submit", (event) => {
     review: "",
     coordinates: null,
     createdAt: Date.now(),
+    updatedAt: Date.now(),
   };
 
   if (!restaurant.name || !restaurant.region || !restaurant.address) return;
@@ -108,7 +116,7 @@ helpDialog.addEventListener("click", (event) => {
 toggleTastedButton.addEventListener("click", () => {
   restaurants = restaurants.map((restaurant) => {
     if (restaurant.id !== activeRestaurantId) return restaurant;
-    return { ...restaurant, tasted: !restaurant.tasted };
+    return { ...restaurant, tasted: !restaurant.tasted, updatedAt: Date.now() };
   });
   saveRestaurants();
   render();
@@ -116,8 +124,10 @@ toggleTastedButton.addEventListener("click", () => {
 });
 
 deleteButton.addEventListener("click", () => {
-  restaurants = restaurants.filter((restaurant) => restaurant.id !== activeRestaurantId);
-  saveRestaurants();
+  const deletedId = activeRestaurantId;
+  restaurants = restaurants.filter((restaurant) => restaurant.id !== deletedId);
+  persistRestaurants();
+  deleteCloudRestaurant(deletedId);
   dialog.close();
   render();
 });
@@ -223,6 +233,7 @@ function saveRestaurantInfo() {
       district: getDistrict(region),
       address,
       note,
+      updatedAt: Date.now(),
     };
   });
   saveRestaurants();
@@ -241,6 +252,7 @@ function saveEatingRecord() {
       revisit: revisitInput.checked,
       rating: Number(ratingInput.value),
       review: reviewInput.value.trim(),
+      updatedAt: Date.now(),
     };
   });
   saveRestaurants();
@@ -325,7 +337,7 @@ function saveCurrentLocationForActiveRestaurant() {
       };
       restaurants = restaurants.map((restaurant) => {
         if (restaurant.id !== activeRestaurantId) return restaurant;
-        return { ...restaurant, coordinates };
+        return { ...restaurant, coordinates, updatedAt: Date.now() };
       });
       saveRestaurants();
       render();
@@ -345,7 +357,7 @@ function resetActiveRestaurantLocation() {
 
   restaurants = restaurants.map((restaurant) => {
     if (restaurant.id !== activeRestaurantId) return restaurant;
-    return { ...restaurant, coordinates: null };
+    return { ...restaurant, coordinates: null, updatedAt: Date.now() };
   });
   saveRestaurants();
   render();
@@ -415,12 +427,17 @@ function loadRestaurants() {
 }
 
 function saveRestaurants() {
+  persistRestaurants();
+  scheduleCloudSync();
+}
+
+function persistRestaurants() {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(restaurants));
 }
 
 function confirmExportRestaurants() {
   const confirmed = confirm(
-    `导出数据会下载一个 JSON 备份文件，用来换手机或恢复清单。\n\n请妥善保存这个文件，不要随便发给别人。\n\n确定要导出当前 ${restaurants.length} 家店吗？`,
+    `备份数据会下载一个 JSON 文件，用来在误删、同步异常或换云服务时恢复清单。\n\n请妥善保存这个文件，不要随便发给别人。\n\n确定要备份当前 ${restaurants.length} 家店吗？`,
   );
   if (!confirmed) return;
 
@@ -442,7 +459,7 @@ function exportRestaurants() {
 
 function showImportGuide() {
   const confirmed = confirm(
-    `导入数据说明：\n\n1. 先在旧手机点击“导出数据”，保存 JSON 备份文件。\n2. 通过 AirDrop、iCloud Drive、微信文件、邮件或网盘把文件传到新手机。\n3. 在新手机打开这个网页，点击“导入数据”，选择那个 JSON 文件。\n4. 导入会覆盖当前手机上的清单，包括店名、地址、备注、吃后感、评分和已品尝状态。\n\n注意事项：\n- 请选择本应用导出的 JSON 文件。\n- 导入前如果当前手机也有数据，建议先导出备份。\n- 备份文件没有加密，不要发给无关的人。\n\n已了解并继续导入吗？`,
+    `恢复备份说明：\n\n1. 请选择之前通过“备份数据”下载的 JSON 文件。\n2. 恢复后会覆盖当前手机和云端清单。\n3. 店名、地址、备注、吃后感、评分、再来吃和已品尝状态都会恢复。\n\n注意事项：\n- 恢复前如果当前清单还有用，建议先备份一次。\n- 备份文件没有加密，不要发给无关的人。\n\n已了解并继续恢复吗？`,
   );
   if (confirmed) {
     importInput.click();
@@ -455,24 +472,26 @@ function importRestaurants(event) {
   if (!file) return;
 
   const reader = new FileReader();
-  reader.addEventListener("load", () => {
+  reader.addEventListener("load", async () => {
     try {
       const imported = JSON.parse(reader.result);
       const nextRestaurants = normalizeImportedRestaurants(imported);
-      const confirmed = confirm(`导入会覆盖当前清单，并恢复 ${nextRestaurants.length} 家店。确定继续吗？`);
+      const confirmed = confirm(`恢复备份会覆盖当前清单和云端数据，并恢复 ${nextRestaurants.length} 家店。确定继续吗？`);
       if (!confirmed) return;
 
-      restaurants = nextRestaurants;
+      restaurants = nextRestaurants.map((restaurant) => ({ ...restaurant, updatedAt: Date.now() }));
       activeFilter = "all";
       activeDistrict = "all";
       activeRestaurantId = null;
       recommendation.textContent = "";
-      saveRestaurants();
+      persistRestaurants();
       if (dialog.open) dialog.close();
       render();
-      alert("导入成功。");
+      await replaceCloudRestaurants();
+      alert("恢复成功。");
     } catch {
-      alert("导入失败，请选择之前导出的 JSON 文件。");
+      setSyncStatus("同步失败");
+      alert("恢复失败，请选择之前备份的 JSON 文件。");
     }
   });
   reader.readAsText(file, "utf-8");
@@ -509,6 +528,7 @@ function normalizeImportedRestaurants(imported, options = {}) {
       review,
       coordinates,
       createdAt: Number.isFinite(item.createdAt) ? item.createdAt : Date.now(),
+      updatedAt: Number.isFinite(item.updatedAt) ? item.updatedAt : Date.now(),
     };
   });
 }
@@ -528,6 +548,142 @@ function getTodayText() {
   const month = String(date.getMonth() + 1).padStart(2, "0");
   const day = String(date.getDate()).padStart(2, "0");
   return `${year}-${month}-${day}`;
+}
+
+async function loadCloudRestaurants() {
+  setSyncStatus("同步中");
+  try {
+    const response = await supabaseFetch(`${tableUrl()}?list_id=eq.${encodeURIComponent(SHARED_LIST_ID)}&select=*&order=created_at.desc`);
+    const rows = await readSupabaseResponse(response);
+    if (!rows.length && restaurants.length) {
+      await syncAllRestaurants();
+      return;
+    }
+    restaurants = rows.map(fromSupabaseRow);
+    persistRestaurants();
+    render();
+    setSyncStatus("已同步");
+  } catch {
+    setSyncStatus("同步失败");
+  }
+}
+
+function scheduleCloudSync() {
+  clearTimeout(syncTimer);
+  syncTimer = setTimeout(syncAllRestaurants, 300);
+}
+
+async function syncAllRestaurants() {
+  if (!restaurants.length) {
+    setSyncStatus("已同步");
+    return;
+  }
+
+  setSyncStatus("同步中");
+  try {
+    const response = await supabaseFetch(`${tableUrl()}?on_conflict=id`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Prefer: "resolution=merge-duplicates,return=minimal",
+      },
+      body: JSON.stringify(restaurants.map(toSupabaseRow)),
+    });
+    await readSupabaseResponse(response);
+    setSyncStatus("已同步");
+  } catch {
+    setSyncStatus("同步失败");
+  }
+}
+
+async function deleteCloudRestaurant(id) {
+  setSyncStatus("同步中");
+  try {
+    const response = await supabaseFetch(
+      `${tableUrl()}?list_id=eq.${encodeURIComponent(SHARED_LIST_ID)}&id=eq.${encodeURIComponent(id)}`,
+      { method: "DELETE", headers: { Prefer: "return=minimal" } },
+    );
+    await readSupabaseResponse(response);
+    setSyncStatus("已同步");
+  } catch {
+    setSyncStatus("同步失败");
+  }
+}
+
+async function replaceCloudRestaurants() {
+  setSyncStatus("同步中");
+  const deleteResponse = await supabaseFetch(`${tableUrl()}?list_id=eq.${encodeURIComponent(SHARED_LIST_ID)}`, {
+    method: "DELETE",
+    headers: { Prefer: "return=minimal" },
+  });
+  await readSupabaseResponse(deleteResponse);
+  await syncAllRestaurants();
+}
+
+function tableUrl() {
+  return `${SUPABASE_REST_URL.replace(/\/$/, "")}/${RESTAURANTS_TABLE}`;
+}
+
+function supabaseFetch(url, options = {}) {
+  return fetch(url, {
+    ...options,
+    headers: {
+      apikey: SUPABASE_KEY,
+      Authorization: `Bearer ${SUPABASE_KEY}`,
+      ...(options.headers || {}),
+    },
+  });
+}
+
+async function readSupabaseResponse(response) {
+  if (response.ok) {
+    if (response.status === 204) return null;
+    const text = await response.text();
+    return text ? JSON.parse(text) : null;
+  }
+  throw new Error(await response.text());
+}
+
+function toSupabaseRow(restaurant) {
+  return {
+    id: restaurant.id,
+    list_id: SHARED_LIST_ID,
+    name: restaurant.name,
+    region: restaurant.region || "",
+    district: restaurant.district || getDistrict(restaurant.region || ""),
+    address: restaurant.address || "",
+    note: restaurant.note || "",
+    tasted: Boolean(restaurant.tasted),
+    revisit: Boolean(restaurant.revisit),
+    rating: Number(restaurant.rating) || 0,
+    review: restaurant.review || "",
+    coordinates: restaurant.coordinates,
+    created_at: restaurant.createdAt || Date.now(),
+    updated_at: restaurant.updatedAt || Date.now(),
+  };
+}
+
+function fromSupabaseRow(row) {
+  return {
+    id: row.id,
+    name: row.name || "",
+    region: row.region || "",
+    district: row.district || getDistrict(row.region || ""),
+    address: row.address || "",
+    note: row.note || "",
+    tasted: Boolean(row.tasted),
+    revisit: Boolean(row.revisit),
+    rating: Number(row.rating) || 0,
+    review: row.review || "",
+    coordinates: normalizeCoordinates(row.coordinates),
+    createdAt: Number(row.created_at) || Date.now(),
+    updatedAt: Number(row.updated_at) || Date.now(),
+  };
+}
+
+function setSyncStatus(text) {
+  syncStatus.textContent = text;
+  syncStatus.dataset.state = text;
 }
 
 if ("serviceWorker" in navigator) {
