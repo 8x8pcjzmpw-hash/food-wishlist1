@@ -53,6 +53,7 @@ let activeFilter = "all";
 let activeDistrict = "all";
 let activeRestaurantId = null;
 let syncTimer = null;
+let initialCloudLoadDone = false;
 
 render();
 loadCloudRestaurants();
@@ -60,6 +61,7 @@ loadCloudRestaurants();
 form.addEventListener("submit", (event) => {
   event.preventDefault();
 
+  const now = Date.now();
   const restaurant = {
     id: createId(),
     name: nameInput.value.trim(),
@@ -72,8 +74,8 @@ form.addEventListener("submit", (event) => {
     rating: 0,
     review: "",
     coordinates: null,
-    createdAt: Date.now(),
-    updatedAt: Date.now(),
+    createdAt: now,
+    updatedAt: now,
   };
 
   if (!restaurant.name || !restaurant.region || !restaurant.address) return;
@@ -428,7 +430,9 @@ function loadRestaurants() {
 
 function saveRestaurants() {
   persistRestaurants();
-  scheduleCloudSync();
+  if (initialCloudLoadDone) {
+    scheduleCloudSync();
+  }
 }
 
 function persistRestaurants() {
@@ -553,19 +557,46 @@ function getTodayText() {
 async function loadCloudRestaurants() {
   setSyncStatus("同步中");
   try {
+    const localRestaurants = [...restaurants];
     const response = await supabaseFetch(`${tableUrl()}?list_id=eq.${encodeURIComponent(SHARED_LIST_ID)}&select=*&order=created_at.desc`);
     const rows = await readSupabaseResponse(response);
-    if (!rows.length && restaurants.length) {
-      await syncAllRestaurants();
-      return;
-    }
-    restaurants = rows.map(fromSupabaseRow);
+    const cloudRestaurants = rows.map(fromSupabaseRow);
+    const merged = mergeRestaurantLists(localRestaurants, cloudRestaurants);
+
+    restaurants = merged;
     persistRestaurants();
     render();
-    setSyncStatus("已同步");
+    initialCloudLoadDone = true;
+
+    if (hasRestaurantDiff(merged, cloudRestaurants)) {
+      await syncAllRestaurants();
+    } else {
+      setSyncStatus("已同步");
+    }
   } catch {
+    initialCloudLoadDone = true;
     setSyncStatus("同步失败");
   }
+}
+
+function mergeRestaurantLists(localItems, cloudItems) {
+  const byId = new Map();
+  [...cloudItems, ...localItems].forEach((item) => {
+    const existing = byId.get(item.id);
+    if (!existing || Number(item.updatedAt || 0) > Number(existing.updatedAt || 0)) {
+      byId.set(item.id, item);
+    }
+  });
+  return [...byId.values()].sort((a, b) => Number(b.createdAt || 0) - Number(a.createdAt || 0));
+}
+
+function hasRestaurantDiff(left, right) {
+  if (left.length !== right.length) return true;
+  const rightById = new Map(right.map((item) => [item.id, item]));
+  return left.some((item) => {
+    const other = rightById.get(item.id);
+    return !other || JSON.stringify(toSupabaseRow(item)) !== JSON.stringify(toSupabaseRow(other));
+  });
 }
 
 function scheduleCloudSync() {
